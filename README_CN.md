@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/soulteary/preflight-kit.svg)](https://pkg.go.dev/github.com/soulteary/preflight-kit)
+[![Go Report Card](.github/goreportcard.svg)](.github/goreportcard-report.md)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 启动自检：不只说哪里不对，还说照着做什么。零依赖。
 
@@ -114,6 +116,52 @@ results.SortedByLevel()  // 最严重的排前面，给界面用
 `Run` **按顺序、串行**执行检查。检查本身很便宜，而书写顺序通常就是最好读的顺序 ——「目录在不在」先于「镜像在不在」先于「Job 能不能连上 docker」。并发执行省下几毫秒，代价是把人们真正要读的那个东西打乱。
 
 panic 的检查会变成一条 error 结果，而不是把整个程序带走。
+
+## 要求
+
+- **Go 1.27+**（`go.mod` 中声明 `go 1.27.0`）
+- **零依赖。** 连测试在内，全部只用标准库。
+- **仅限 Unix。** `FileGID` 通过 `syscall.Stat_t` 读取 POSIX 属主信息，因此本包
+  在 Windows 上无法编译。macOS 与 Linux 都可以；不过探针描述的那套语义 ——
+  uid、gid、socket 属主 —— 是 Linux 的。
+
+## 测试覆盖率
+
+```bash
+go test ./... -v
+
+# 带覆盖率 —— CI 实际执行的命令
+go test -race -coverprofile=coverage.out -covermode=atomic ./...
+go tool cover -html=coverage.out -o coverage.html
+go tool cover -func=coverage.out
+```
+
+语句覆盖率为 **92.8%**。CI 每次运行都会把可浏览的 HTML 报告作为构建产物上传；
+不接入任何覆盖率服务。
+
+`example_test.go` 里的可运行示例是测试套件的一部分。它们是*外部*测试包
+（`package preflight_test`），只能编译到导出的 API —— 这能逼着这套 API 对包外
+调用者保持可用 —— 而且 `go test` 会校验它们打印的输出，因此示例不会与文档
+所述发生偏移。
+
+## 变更日志
+
+见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 安全
+
+结果里有意写出真实的路径、uid 和地址，这让输出成为给运维看的日志，而不是可以
+对外公开的东西。hint 是命令，但本包不会执行它们。[SECURITY.md](SECURITY.md)
+解释了这两点对调用方意味着什么，以及如何上报安全问题 —— 请不要为安全问题开
+公开 issue。
+
+## 贡献
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 提交 Pull Request
 
 ## 许可证
 
