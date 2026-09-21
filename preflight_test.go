@@ -477,3 +477,27 @@ func TestDir(t *testing.T) {
 		t.Errorf("Dir = %q", got)
 	}
 }
+
+func TestResultsStringIsOneLinePerResult(t *testing.T) {
+	results := Results{
+		OK("data directory", "/srv/app/data is writable"),
+		Warn("docker socket", "this process is not in the owning group", `group_add: ["998"]`),
+		Fail("image", "app:v2 is not present locally", "docker pull app:v2"),
+	}
+
+	want := strings.Join([]string{
+		"[preflight ok] data directory: /srv/app/data is writable",
+		`[preflight !] docker socket: this process is not in the owning group  -> group_add: ["998"]`,
+		"[preflight x] image: app:v2 is not present locally  -> docker pull app:v2",
+	}, "\n")
+
+	if got := results.String(); got != want {
+		t.Errorf("Results.String() =\n%s\n\nwant\n%s", got, want)
+	}
+}
+
+func TestEmptyResultsStringIsEmpty(t *testing.T) {
+	if got := (Results{}).String(); got != "" {
+		t.Errorf("empty Results.String() = %q, want %q", got, "")
+	}
+}

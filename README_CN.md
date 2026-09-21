@@ -33,6 +33,12 @@ results.Log(log.Printf)
 go get github.com/soulteary/preflight-kit
 ```
 
+包名是 `preflight` 而不是 `preflight-kit`，所以 import 时把名字写出来：
+
+```go
+import preflight "github.com/soulteary/preflight-kit"
+```
+
 ## 只报告问题而不给做法，等于把活儿挪走了而不是干完了
 
 `Result` 除了 `Message` 还带 `Hint`，并且 message 应当写出**真实的**路径、地址或取值。
@@ -119,7 +125,9 @@ panic 的检查会变成一条 error 结果，而不是把整个程序带走。
 
 ## 要求
 
-- **Go 1.27+**（`go.mod` 中声明 `go 1.27.0`）
+- **Go 1.22+**（`go.mod` 中声明 `go 1.22.0`）。本包没有任何地方需要更新的工具链，
+  而库的 `go` 指令对所有导入方都是硬性下限，所以压到代码允许的最低。CI 会同时
+  用 1.22 和当前发行版跑测试。
 - **零依赖。** 连测试在内，全部只用标准库。
 - **仅限 Unix。** `FileGID` 通过 `syscall.Stat_t` 读取 POSIX 属主信息，因此本包
   在 Windows 上无法编译。macOS 与 Linux 都可以；不过探针描述的那套语义 ——
@@ -136,8 +144,9 @@ go tool cover -html=coverage.out -o coverage.html
 go tool cover -func=coverage.out
 ```
 
-语句覆盖率为 **92.8%**。CI 每次运行都会把可浏览的 HTML 报告作为构建产物上传；
-不接入任何覆盖率服务。
+语句覆盖率为 **94.9%**。测试任务会在 Linux 和 macOS 上、用 Go 1.22 和当前发行版
+各跑一遍；其中一个组合会把可浏览的 HTML 报告作为构建产物上传。不接入任何覆盖率
+服务。
 
 `example_test.go` 里的可运行示例是测试套件的一部分。它们是*外部*测试包
 （`package preflight_test`），只能编译到导出的 API —— 这能逼着这套 API 对包外

@@ -40,6 +40,12 @@ results.Log(log.Printf)
 go get github.com/soulteary/preflight-kit
 ```
 
+The package is named `preflight`, not `preflight-kit`, so spell the import name out:
+
+```go
+import preflight "github.com/soulteary/preflight-kit"
+```
+
 ## A finding without a fix has moved the work, not done it
 
 `Result` carries a `Hint` as well as a `Message`, and the message is expected to name the actual path, address or value involved.
@@ -126,7 +132,10 @@ A panicking check becomes an error result rather than taking the program down wi
 
 ## Requirements
 
-- **Go 1.27+** (`go.mod` declares `go 1.27.0`)
+- **Go 1.22+** (`go.mod` declares `go 1.22.0`). Nothing here needs a newer
+  toolchain, and a library's `go` directive is a hard floor for everyone who
+  imports it, so it is kept as low as the code allows. CI tests against 1.22
+  and the current release.
 - **No dependencies.** The standard library is the whole of it, tests included.
 - **Unix only.** `FileGID` reads POSIX ownership through `syscall.Stat_t`, so
   the package does not build on Windows. macOS and Linux both work; the
@@ -143,8 +152,9 @@ go tool cover -html=coverage.out -o coverage.html
 go tool cover -func=coverage.out
 ```
 
-Statement coverage is **92.8%**. CI uploads the browsable HTML report as a
-build artifact on every run; no coverage service is involved.
+Statement coverage is **94.9%**. The test job runs on Linux and macOS, against
+Go 1.22 and the current release; one of those combinations uploads the
+browsable HTML report as a build artifact. No coverage service is involved.
 
 The runnable examples in `example_test.go` are part of the suite. They are an
 *external* test package (`package preflight_test`), so they compile only
