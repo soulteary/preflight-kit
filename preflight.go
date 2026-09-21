@@ -86,9 +86,27 @@ type CheckFunc func(ctx context.Context) Result
 // Run calls f.
 func (f CheckFunc) Run(ctx context.Context) Result { return f(ctx) }
 
+// NamedCheck is a Check that reports under a name of its own.
+//
+// It exists because two Results are produced by the harness rather than by the
+// check: the one for a check that panicked, and the one for a check the
+// preflight deadline reached first. Neither can take its name from a Result
+// the check never returned, so [Run] asks the Check itself. A Check that does
+// not implement NamedCheck is reported as "check" in those two cases.
+//
+// [Named] is the usual way to get one; implement it directly when a Check has
+// its own type.
+type NamedCheck interface {
+	Check
+
+	// Name is the check's name, in the operator's vocabulary. An empty name
+	// is treated as no name at all.
+	Name() string
+}
+
 // Named wraps a function as a Check that reports under the given name,
 // including when it panics or the context is cancelled.
-func Named(name string, f func(ctx context.Context) Result) Check {
+func Named(name string, f func(ctx context.Context) Result) NamedCheck {
 	return namedCheck{name: name, run: f}
 }
 
@@ -131,7 +149,7 @@ func Run(ctx context.Context, checks ...Check) Results {
 
 func runOne(ctx context.Context, c Check) (result Result) {
 	name := "check"
-	if n, ok := c.(interface{ Name() string }); ok && n.Name() != "" {
+	if n, ok := c.(NamedCheck); ok && n.Name() != "" {
 		name = n.Name()
 	}
 	defer func() {

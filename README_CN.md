@@ -33,6 +33,12 @@ results.Log(log.Printf)
 go get github.com/soulteary/preflight-kit
 ```
 
+包名是 `preflight` 而不是 `preflight-kit`，所以 import 时把名字写出来：
+
+```go
+import preflight "github.com/soulteary/preflight-kit"
+```
+
 ## 只报告问题而不给做法，等于把活儿挪走了而不是干完了
 
 `Result` 除了 `Message` 还带 `Hint`，并且 message 应当写出**真实的**路径、地址或取值。
@@ -56,7 +62,7 @@ go get github.com/soulteary/preflight-kit
 | `SocketAccessible` | socket 存在**并且**本进程在它的属组里 |
 | `TCPReachable` | 真的有人应答 —— 且永远带超时 |
 | `SubdirsPrivate` | 哪些目录能被其他用户进入。只报告，从不修改 |
-| `PathExists`、`CommandsPresent`、`FileGID`、`InGroup` | |
+| `PathExists`、`MissingCommands`、`FileGID`、`InGroup` | |
 
 ### 为什么 `DirWritable` 还要删一次
 
@@ -119,7 +125,9 @@ panic 的检查会变成一条 error 结果，而不是把整个程序带走。
 
 ## 要求
 
-- **Go 1.27+**（`go.mod` 中声明 `go 1.27.0`）
+- **Go 1.27+**（`go.mod` 中声明 `go 1.27.0`）。几个 kit 一起跟随当前 Go 发行版，
+  所以这是有意选定的下限，而不是代码能跑的最低版本。注意：库的 `go` 指令对所有
+  导入方都是硬性下限 —— `go get` 会把你自己的 `go.mod` 顶上来。
 - **零依赖。** 连测试在内，全部只用标准库。
 - **仅限 Unix。** `FileGID` 通过 `syscall.Stat_t` 读取 POSIX 属主信息，因此本包
   在 Windows 上无法编译。macOS 与 Linux 都可以；不过探针描述的那套语义 ——
@@ -136,8 +144,9 @@ go tool cover -html=coverage.out -o coverage.html
 go tool cover -func=coverage.out
 ```
 
-语句覆盖率为 **92.8%**。CI 每次运行都会把可浏览的 HTML 报告作为构建产物上传；
-不接入任何覆盖率服务。
+语句覆盖率为 **95.2%**。测试任务会在 Linux 和 macOS 上各跑一遍，用的是 `go.mod`
+声明的 Go 版本；Linux 那个会把可浏览的 HTML 报告作为构建产物上传。不接入任何
+覆盖率服务。
 
 `example_test.go` 里的可运行示例是测试套件的一部分。它们是*外部*测试包
 （`package preflight_test`），只能编译到导出的 API —— 这能逼着这套 API 对包外

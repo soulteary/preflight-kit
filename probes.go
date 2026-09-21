@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"syscall"
 	"time"
 )
@@ -183,17 +182,23 @@ func joinPaths(paths []string) string {
 	return out
 }
 
-// CommandsPresent turns the result of a "which of these commands exist" probe
+// MissingCommands turns the result of a "which of these commands exist" probe
 // into a Result. The caller supplies the missing list, because how to ask
 // depends on where the commands have to be -- this host, a container image, a
-// remote machine.
+// remote machine -- and this package will not guess. On the local PATH that is
+// exec.LookPath; in an image it is a `docker run` away; on another machine it
+// is someone else's problem entirely.
+//
+// It is named for what it takes rather than what it checks, because it does
+// not check anything: the lookup has already happened by the time it is
+// called.
 //
 // Missing tools deserve a check of their own because of how they fail: not
 // with "command not found" at a useful moment, but as whatever the thing
 // calling them does when it is absent. A build step that silently downloads a
 // tarball instead of cloning, because git is missing, looks like a success
 // until someone wonders why the working directory has no history.
-func CommandsPresent(name, where string, missing []string) Result {
+func MissingCommands(name, where string, missing []string) Result {
 	if len(missing) == 0 {
 		return OK(name, where+" has every required command")
 	}
@@ -202,6 +207,3 @@ func CommandsPresent(name, where string, missing []string) Result {
 			where, joinPaths(missing)),
 		"install them in "+where)
 }
-
-// Dir joins the elements, for callers building probe paths.
-func Dir(elem ...string) string { return filepath.Join(elem...) }
