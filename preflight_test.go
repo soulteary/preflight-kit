@@ -340,13 +340,13 @@ func TestSubdirsPrivate(t *testing.T) {
 	}
 }
 
-func TestCommandsPresent(t *testing.T) {
-	if r := CommandsPresent("tools", "the image", nil); r.Level != LevelOK {
-		t.Errorf("CommandsPresent(none missing) = %+v", r)
+func TestMissingCommands(t *testing.T) {
+	if r := MissingCommands("tools", "the image", nil); r.Level != LevelOK {
+		t.Errorf("MissingCommands(none missing) = %+v", r)
 	}
-	r := CommandsPresent("tools", "the image", []string{"git", "unzip"})
+	r := MissingCommands("tools", "the image", []string{"git", "unzip"})
 	if r.Level != LevelWarn || !strings.Contains(r.Message, "git unzip") {
-		t.Errorf("CommandsPresent = %+v", r)
+		t.Errorf("MissingCommands = %+v", r)
 	}
 }
 
@@ -472,12 +472,6 @@ func TestWrapAndKindOf(t *testing.T) {
 	}
 }
 
-func TestDir(t *testing.T) {
-	if got := Dir("a", "b", "c"); got != filepath.Join("a", "b", "c") {
-		t.Errorf("Dir = %q", got)
-	}
-}
-
 func TestResultsStringIsOneLinePerResult(t *testing.T) {
 	results := Results{
 		OK("data directory", "/srv/app/data is writable"),
@@ -499,5 +493,50 @@ func TestResultsStringIsOneLinePerResult(t *testing.T) {
 func TestEmptyResultsStringIsEmpty(t *testing.T) {
 	if got := (Results{}).String(); got != "" {
 		t.Errorf("empty Results.String() = %q, want %q", got, "")
+	}
+}
+
+func TestNamedSatisfiesNamedCheck(t *testing.T) {
+	var c Check = Named("data directory", func(context.Context) Result {
+		return OK("data directory", "fine")
+	})
+
+	named, ok := c.(NamedCheck)
+	if !ok {
+		t.Fatal("Named() does not satisfy NamedCheck")
+	}
+	if got := named.Name(); got != "data directory" {
+		t.Errorf("Name() = %q, want %q", got, "data directory")
+	}
+}
+
+// A Check with its own type gets named the same way, which is the whole point
+// of the interface being exported.
+type namedByType struct{}
+
+func (namedByType) Name() string               { return "image present" }
+func (namedByType) Run(context.Context) Result { panic("boom") }
+
+func TestAThirdPartyNamedCheckIsReportedUnderItsName(t *testing.T) {
+	results := Run(context.Background(), namedByType{})
+
+	if results[0].Name != "image present" {
+		t.Errorf("Name = %q, want %q", results[0].Name, "image present")
+	}
+	if !results[0].Failed() {
+		t.Errorf("Level = %q, want an error", results[0].Level)
+	}
+}
+
+// Without a name, the fallback is used rather than an empty one.
+type unnamedCheck struct{}
+
+func (unnamedCheck) Run(context.Context) Result { panic("boom") }
+
+func TestAnUnnamedCheckFallsBackToAPlaceholder(t *testing.T) {
+	results := Run(context.Background(), unnamedCheck{})
+
+	if results[0].Name != "check" {
+		t.Errorf("Name = %q, want %q", results[0].Name, "check")
 	}
 }

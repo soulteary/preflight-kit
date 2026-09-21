@@ -28,7 +28,7 @@
 // Startup: [Check], [Run] and [Results] are the harness; [Named] and
 // [CheckFunc] adapt a function to it; [OK], [Warn] and [Fail] build the
 // verdicts. The built-in probes -- [DirWritable], [PathExists], [TCPReachable],
-// [SocketAccessible], [SubdirsPrivate] and [CommandsPresent] -- cover the
+// [SocketAccessible], [SubdirsPrivate] and [MissingCommands] -- cover the
 // settings that go wrong most often.
 //
 // Afterwards: [Classifier] turns a runtime failure into a [Diagnosis], so the
@@ -62,7 +62,8 @@
 //
 // A check is any function of a context returning a [Result]; [Named] gives it
 // a name and makes it report under that name even when it panics or the
-// preflight deadline elapses first. Implementations must be read-only, because
+// preflight deadline elapses first. A Check with a type of its own gets the
+// same treatment by implementing [NamedCheck]. Implementations must be read-only, because
 // preflight runs on every start, including starts that are already going
 // badly. The one deliberate exception is [DirWritable], which creates and
 // removes a randomly named probe file -- the only way to learn whether a

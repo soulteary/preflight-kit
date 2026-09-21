@@ -69,7 +69,7 @@ import preflight "github.com/soulteary/preflight-kit"
 | `SocketAccessible` | The socket exists *and* this process is in its group |
 | `TCPReachable` | Something answers — always bounded by a timeout |
 | `SubdirsPrivate` | Which directories let other users in. Reports; never changes |
-| `PathExists`, `CommandsPresent`, `FileGID`, `InGroup` | |
+| `PathExists`, `MissingCommands`, `FileGID`, `InGroup` | |
 
 ### Why `DirWritable` also deletes
 
@@ -132,10 +132,10 @@ A panicking check becomes an error result rather than taking the program down wi
 
 ## Requirements
 
-- **Go 1.22+** (`go.mod` declares `go 1.22.0`). Nothing here needs a newer
-  toolchain, and a library's `go` directive is a hard floor for everyone who
-  imports it, so it is kept as low as the code allows. CI tests against 1.22
-  and the current release.
+- **Go 1.27+** (`go.mod` declares `go 1.27.0`). The kits track the current Go
+  release together, so this is a deliberate floor rather than the lowest the
+  code could run on. Note that a library's `go` directive is a hard minimum for
+  everyone who imports it: `go get` will raise your own `go.mod` to match.
 - **No dependencies.** The standard library is the whole of it, tests included.
 - **Unix only.** `FileGID` reads POSIX ownership through `syscall.Stat_t`, so
   the package does not build on Windows. macOS and Linux both work; the
@@ -152,8 +152,8 @@ go tool cover -html=coverage.out -o coverage.html
 go tool cover -func=coverage.out
 ```
 
-Statement coverage is **94.9%**. The test job runs on Linux and macOS, against
-Go 1.22 and the current release; one of those combinations uploads the
+Statement coverage is **95.2%**. The test job runs on Linux and macOS, against
+Go 1.27 and the current release; one of those combinations uploads the
 browsable HTML report as a build artifact. No coverage service is involved.
 
 The runnable examples in `example_test.go` are part of the suite. They are an

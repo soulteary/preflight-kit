@@ -16,22 +16,23 @@ write to, a network that no longer exists, a docker socket the user has no
 permission on — were being discovered by the first job that needed them rather
 than at startup.
 
-**Requires Go 1.22 or newer, and Unix.** A library's `go` directive is a hard
-floor for everyone who imports it, so it is kept as low as the code allows
-rather than tracking the newest toolchain. `FileGID` reads POSIX ownership
-through `syscall.Stat_t`, so the package does not build on Windows.
+**Requires Go 1.27 or newer, and Unix.** The kits track the current Go release
+together. Note that a library's `go` directive is a hard minimum for everyone
+who imports it: `go get` raises the consumer's own `go.mod` to match.
+`FileGID` reads POSIX ownership through `syscall.Stat_t`, so the package does
+not build on Windows.
 
 ### What 1.0.0 provides
 
-- The harness: `Check`, `CheckFunc`, `Named`, `Run` and `Results`, with `OK`,
-  `Warn` and `Fail` building the verdicts. Checks run in the order given,
-  sequentially, and a panicking check becomes an error result rather than
-  taking the program down.
+- The harness: `Check`, `NamedCheck`, `CheckFunc`, `Named`, `Run` and
+  `Results`, with `OK`, `Warn` and `Fail` building the verdicts. Checks run in
+  the order given, sequentially, and a panicking check becomes an error result
+  rather than taking the program down.
 - A `Result` that carries a `Hint` as well as a `Message`, because a check
   reporting a problem without saying what to do about it has moved the work
   rather than done it.
 - Built-in probes: `DirWritable`, `PathExists`, `TCPReachable`,
-  `SocketAccessible`, `SubdirsPrivate` and `CommandsPresent`.
+  `SocketAccessible`, `SubdirsPrivate` and `MissingCommands`.
 - `Results.Log`, `Results.Problems`, `Results.Worst`, `Results.OK` and
   `Results.SortedByLevel` for reporting — log output in check order, worst-first
   for a UI.
@@ -39,6 +40,25 @@ through `syscall.Stat_t`, so the package does not build on Windows.
   `KindOf`, which answer the same question ("what should I do about this?") for
   failures that happen after startup. `Advice` keeps `CheckCommand` and
   `FixCommand` separate so the read-only one can always be offered first.
+
+### Settled before the release
+
+These are API decisions rather than changes anyone can observe, since nothing
+was tagged before. They are recorded because 1.0.0 is where they stop being
+adjustable.
+
+- **`NamedCheck` is now an exported interface.** `Run` names a panicking or
+  timed-out check by asking the `Check` for its name — neither Result comes
+  from the check itself, so there is nothing else to take a name from. That
+  contract was discovered through an anonymous `interface{ Name() string }`
+  assertion and documented nowhere, so a `Check` with a type of its own had no
+  way to know it could opt in. `Named` now returns `NamedCheck`.
+- **`CommandsPresent` is now `MissingCommands`.** It never checked anything —
+  the caller does the lookup and passes the missing list, deliberately, because
+  where the commands have to be (this host, an image, another machine) decides
+  how to ask. The name now says what it takes rather than implying a probe.
+- **`Dir` is gone.** It was `filepath.Join` under another name, and a frozen
+  API is the wrong place to keep an alias.
 
 ### Also in the repository
 
@@ -50,7 +70,7 @@ through `syscall.Stat_t`, so the package does not build on Windows.
   external test package, so they compile only against the exported API and
   cannot drift from it.
 - CI covering formatting, vet, tests, golangci-lint and govulncheck, with the
-  test job run against Go 1.22 and the current release on Linux and macOS. The
+  test job run against Go 1.27 and the current release on Linux and macOS. The
   HTML coverage report is uploaded as a build artifact; no coverage service is
   involved.
 - A Go Report Card workflow, run on demand, that regenerates the badge and
