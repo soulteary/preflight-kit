@@ -1,22 +1,3 @@
-// Package preflight runs read-only self-checks at startup and reports what it
-// found in a form an operator can act on without a second round trip.
-//
-// The problem it addresses is timing. Most deployment mistakes -- a directory
-// the process cannot write to, a network that no longer exists, a socket the
-// user has no permission on -- are perfectly detectable the moment the process
-// starts, and are instead discovered much later, by the first piece of real
-// work that needs them. By then the failure surfaces as whatever that work
-// happens to fail with, at a moment nobody is watching, in a message that says
-// nothing about the setting that caused it.
-//
-// So a Result carries more than a verdict. Message says what was observed;
-// Hint is a command the reader can paste. A check that reports a problem
-// without saying what to do about it has moved the work rather than done it.
-//
-// Checks are read-only, and a failing check never stops the program: reporting
-// is the whole job. A startup self-check that refuses to start is a self-check
-// that will be removed the first time it is wrong about an environment its
-// author did not anticipate.
 package preflight
 
 import (

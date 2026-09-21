@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/soulteary/preflight-kit.svg)](https://pkg.go.dev/github.com/soulteary/preflight-kit)
+[![Go Report Card](.github/goreportcard.svg)](.github/goreportcard-report.md)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 Startup self-checks that say what to do, not just what is wrong. Zero dependencies.
 
@@ -121,6 +123,54 @@ results.SortedByLevel()  // worst first, for a UI
 `Run` executes checks **in order, sequentially**. Checks are cheap, and the order they're written in is usually the order that reads best — "is the directory there" before "is the image there" before "can jobs reach docker". Running them concurrently would save milliseconds and scramble the one thing a human reads the output for.
 
 A panicking check becomes an error result rather than taking the program down with it.
+
+## Requirements
+
+- **Go 1.27+** (`go.mod` declares `go 1.27.0`)
+- **No dependencies.** The standard library is the whole of it, tests included.
+- **Unix only.** `FileGID` reads POSIX ownership through `syscall.Stat_t`, so
+  the package does not build on Windows. macOS and Linux both work; the
+  behaviour the probes describe — uids, gids, socket ownership — is Linux's.
+
+## Test Coverage
+
+```bash
+go test ./... -v
+
+# With coverage — what CI runs
+go test -race -coverprofile=coverage.out -covermode=atomic ./...
+go tool cover -html=coverage.out -o coverage.html
+go tool cover -func=coverage.out
+```
+
+Statement coverage is **92.8%**. CI uploads the browsable HTML report as a
+build artifact on every run; no coverage service is involved.
+
+The runnable examples in `example_test.go` are part of the suite. They are an
+*external* test package (`package preflight_test`), so they compile only
+against the exported API — which keeps that API honest about being usable from
+outside — and `go test` checks their printed output, so they cannot drift from
+what the docs claim.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## Security
+
+Findings name real paths, uids and addresses on purpose, which makes the output
+a log for operators rather than something to publish. Hints are commands, and
+nothing here runs them. [SECURITY.md](SECURITY.md) explains what both mean for
+a caller, and how to report a vulnerability — please do not open a public issue
+for one.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
