@@ -144,9 +144,9 @@ go tool cover -html=coverage.out -o coverage.html
 go tool cover -func=coverage.out
 ```
 
-语句覆盖率为 **95.2%**。测试任务会在 Linux 和 macOS 上、用 Go 1.27 和当前发行版
-各跑一遍；其中一个组合会把可浏览的 HTML 报告作为构建产物上传。不接入任何覆盖率
-服务。
+语句覆盖率为 **95.2%**。测试任务会在 Linux 和 macOS 上各跑一遍，用的是 `go.mod`
+声明的 Go 版本；Linux 那个会把可浏览的 HTML 报告作为构建产物上传。不接入任何
+覆盖率服务。
 
 `example_test.go` 里的可运行示例是测试套件的一部分。它们是*外部*测试包
 （`package preflight_test`），只能编译到导出的 API —— 这能逼着这套 API 对包外
