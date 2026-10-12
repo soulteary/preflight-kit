@@ -5,7 +5,12 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] — unreleased
+## [Unreleased]
+
+Current source builds and consumers require **Go 1.27.2 or newer**, as declared
+in `go.mod`. Unix remains required.
+
+## [1.0.0]
 
 First tagged release. From here the exported API is a compatibility promise:
 it will not change incompatibly before 2.0.0.
@@ -16,7 +21,7 @@ write to, a network that no longer exists, a docker socket the user has no
 permission on — were being discovered by the first job that needed them rather
 than at startup.
 
-**Requires Go 1.27 or newer, and Unix.** The kits track the current Go release
+**The v1.0.0 tag requires Go 1.27.0 or newer, and Unix.** The kits track the current Go release
 together. Note that a library's `go` directive is a hard minimum for everyone
 who imports it: `go get` raises the consumer's own `go.mod` to match.
 `FileGID` reads POSIX ownership through `syscall.Stat_t`, so the package does
