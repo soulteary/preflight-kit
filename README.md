@@ -1,9 +1,6 @@
 # preflight-kit
 
-[![CI](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/soulteary/preflight-kit.svg)](https://pkg.go.dev/github.com/soulteary/preflight-kit)
-[![Go Report Card](.github/goreportcard.svg)](.github/goreportcard-report.md)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/soulteary/preflight-kit/actions/workflows/ci.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/soulteary/preflight-kit.svg)](https://pkg.go.dev/github.com/soulteary/preflight-kit) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE) [![Go Test Coverage](./.github/coverage.svg)](./.github/go-test-report.md) [![Go Report Card](./.github/goreportcard.svg)](./.github/goreportcard-report.md)
 
 Startup self-checks that say what to do, not just what is wrong. Zero dependencies.
 
