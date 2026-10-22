@@ -156,7 +156,7 @@ jobs:
     - name: Reuse GTR coverage profile
       run: cp .github/test-results/coverage.out coverage.out
     - name: Display coverage summary
-      run: go tool cover -func=coverage.out
+      run: GOTOOLCHAIN=auto go tool cover -func=coverage.out
 
       # One job produces the browsable report; the artifact name has to stay
       # unique across the matrix.
