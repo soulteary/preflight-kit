@@ -245,23 +245,45 @@ func TestTCPReachable(t *testing.T) {
 	}
 }
 
-// Unbounded, an address that blackholes packets hangs far longer than anyone
-// waits at startup.
+// Inject a dial that waits for its context instead of assuming an external
+// TEST-NET address is unreachable on every developer or CI network.
 func TestTCPReachableIsAlwaysBounded(t *testing.T) {
-	start := time.Now()
-	// TEST-NET-1 (RFC 5737): routable nowhere.
-	r := TCPReachable(context.Background(), "dep", "192.0.2.1:9", 150*time.Millisecond)
-	if elapsed := time.Since(start); elapsed > 3*time.Second {
-		t.Fatalf("took %v; the timeout was not applied", elapsed)
-	}
-	if r.Level != LevelWarn {
-		t.Errorf("an unreachable address should warn: %+v", r)
-	}
-	// A zero timeout must still be bounded, by the default.
-	start = time.Now()
-	TCPReachable(context.Background(), "dep", "192.0.2.1:9", 0)
-	if elapsed := time.Since(start); elapsed > DefaultDialTimeout+2*time.Second {
-		t.Fatalf("a zero timeout was not replaced by the default: %v", elapsed)
+	for _, timeout := range []time.Duration{150 * time.Millisecond, 0, -time.Second} {
+		t.Run(timeout.String(), func(t *testing.T) {
+			expected := timeout
+			if expected <= 0 {
+				expected = DefaultDialTimeout
+			}
+			start := time.Now()
+			called := false
+			dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
+				called = true
+				if network != "tcp" || addr != "test.invalid:9" {
+					t.Fatalf("unexpected dial arguments: %s %s", network, addr)
+				}
+				deadline, ok := ctx.Deadline()
+				if !ok {
+					t.Fatal("dial context has no deadline")
+				}
+				if duration := deadline.Sub(start); duration < expected || duration > expected+time.Second {
+					t.Fatalf("dial deadline is %v from test start, want %v plus setup time", duration, expected)
+				}
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(expected + time.Second):
+					t.Error("dial context did not expire")
+					return nil, errors.New("test timeout")
+				}
+			}
+			result := tcpReachable(context.Background(), "dep", "test.invalid:9", timeout, dial)
+			if !called || result.Level != LevelWarn || !strings.Contains(result.Message, "test.invalid:9") {
+				t.Fatalf("timed-out dial should warn and name its address: %+v", result)
+			}
+			if elapsed := time.Since(start); elapsed > expected+time.Second {
+				t.Fatalf("dial took %v, expected timeout %v", elapsed, expected)
+			}
+		})
 	}
 }
 
