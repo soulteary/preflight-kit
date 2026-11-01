@@ -71,14 +71,18 @@ const DefaultDialTimeout = 3 * time.Second
 // the TCP stack gives up, which is far longer than anyone will wait at
 // startup for a check that is meant to be reassuring.
 func TCPReachable(ctx context.Context, name, addr string, timeout time.Duration) Result {
+	var d net.Dialer
+	return tcpReachable(ctx, name, addr, timeout, d.DialContext)
+}
+
+func tcpReachable(ctx context.Context, name, addr string, timeout time.Duration, dial func(context.Context, string, string) (net.Conn, error)) Result {
 	if timeout <= 0 {
 		timeout = DefaultDialTimeout
 	}
 	dialCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	var d net.Dialer
-	conn, err := d.DialContext(dialCtx, "tcp", addr)
+	conn, err := dial(dialCtx, "tcp", addr)
 	if err != nil {
 		return Warn(name, fmt.Sprintf("%s is not reachable: %v", addr, err),
 			"check that the service is running and that this process can reach it")
